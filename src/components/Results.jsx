@@ -3,7 +3,7 @@ import { ICONS } from '../lib/predictions'
 
 export default function Results({ result, onReset }) {
   return (
-    <div className="content wide">
+    <div className="content wide content--results">
       <div className="result-head">
         <p className="eyebrow" style={{ margin: 0 }}>
           Aapki tafseeli future summary

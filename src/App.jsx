@@ -5,6 +5,16 @@ import { buildPredictions, TITLE_MAP } from './lib/predictions'
 import SoundToggle from './components/SoundToggle'
 import HeroForm from './components/HeroForm'
 import Results from './components/Results'
+import BrandLogo from './components/BrandLogo'
+
+const STARS = Array.from({ length: 28 }, (_, i) => ({
+  id: i,
+  left: `${(i * 37) % 100}%`,
+  top: `${(i * 53) % 100}%`,
+  delay: `${(i % 8) * 0.4}s`,
+  duration: `${3 + (i % 5)}s`,
+  size: 1 + (i % 3),
+}))
 
 export default function App() {
   const [name, setName] = useState('')
@@ -49,10 +59,31 @@ export default function App() {
 
   return (
     <div className="pager" ref={pagerRef}>
+      <div className="float-logo">
+        <BrandLogo size="sm" />
+      </div>
       <SoundToggle on={sound.on} onToggle={sound.toggle} />
 
       <section className="section">
-        <div className="bg" />
+        <div className="bg" aria-hidden="true">
+          <div className="bg-veil" />
+          <div className="starfield">
+            {STARS.map((s) => (
+              <span
+                key={s.id}
+                className="star"
+                style={{
+                  left: s.left,
+                  top: s.top,
+                  width: s.size,
+                  height: s.size,
+                  animationDelay: s.delay,
+                  animationDuration: s.duration,
+                }}
+              />
+            ))}
+          </div>
+        </div>
         <HeroForm
           name={name}
           dob={dob}
@@ -62,35 +93,49 @@ export default function App() {
           onDobChange={setDob}
           onSubmit={handleSubmit}
         />
-        {result && <div className="hint">Neeche scroll karein ↓</div>}
+        {result && <div className="hint hint-bounce">Neeche scroll karein ↓</div>}
       </section>
 
       <section className="section scrollable" ref={section2Ref}>
-        <div className="bg bg2" />
+        <div className="bg bg2" aria-hidden="true">
+          <div className="bg-veil" />
+          <div className="starfield starfield--dim">
+            {STARS.slice(0, 16).map((s) => (
+              <span
+                key={`b-${s.id}`}
+                className="star"
+                style={{
+                  left: s.left,
+                  top: s.top,
+                  width: s.size,
+                  height: s.size,
+                  animationDelay: s.delay,
+                  animationDuration: s.duration,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="diamond diamond-spin" style={{ width: 90, height: 90, top: '8%', right: '6%' }} />
         <div
-          className="diamond"
-          style={{ width: 90, height: 90, top: '8%', right: '6%', transform: 'rotate(15deg)' }}
-        />
-        <div
-          className="diamond"
+          className="diamond diamond-spin diamond-spin--slow"
           style={{
             width: 50,
             height: 50,
             bottom: '12%',
             left: '4%',
-            transform: 'rotate(25deg)',
             borderColor: 'rgba(255,255,255,0.25)',
           }}
         />
         <div
-          className="diamond"
+          className="diamond diamond-spin"
           style={{
             width: 34,
             height: 34,
             top: '40%',
             right: '3%',
-            transform: 'rotate(10deg)',
             borderColor: 'rgba(255,255,255,0.2)',
+            animationDelay: '1s',
           }}
         />
         <Results result={result} onReset={reset} />

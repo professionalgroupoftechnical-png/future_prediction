@@ -1,3 +1,5 @@
+import BrandLogo from './BrandLogo'
+
 export default function HeroForm({
   name,
   dob,
@@ -8,21 +10,24 @@ export default function HeroForm({
   onSubmit,
 }) {
   return (
-    <div className="content">
-      <p className="eyebrow">Falak</p>
-      <h1>
+    <div className="content content--hero">
+      <div className="hero-brand reveal reveal-1">
+        <BrandLogo size="lg" />
+        <p className="eyebrow brand-name">Falak</p>
+      </div>
+      <h1 className="reveal reveal-2">
         Apna <em>future</em> jano,
         <br />
         chand sitaron ki zubani.
       </h1>
-      <p className="sub">
+      <p className="sub reveal reveal-3">
         Naam aur date of birth dalein — career, shaadi, sehat, paisa, ghar, foreign aur zindagi ke
         baare mein detailed likha hua jawab payein.
       </p>
-      <p className="note">
+      <p className="note reveal reveal-4">
         Sirf tafreeh ke liye — asli faisle experts aur family se mashwara kar ke lein.
       </p>
-      <div className="card">
+      <div className="card reveal reveal-5">
         <div className="field">
           <label htmlFor="name">Apna naam</label>
           <input
