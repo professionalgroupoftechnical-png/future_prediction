@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Falak — Apna Future Jano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root{
+    --ink:#1F2A20;
+    --card:rgba(255,255,255,0.30);
+    --card-border:rgba(255,255,255,0.55);
+    --gold:#F0C674;
+    --danger:#FFB4A6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{ font-family:'Inter', sans-serif; color:var(--ink); }
+
+  .pager{ height:100vh; overflow-y:scroll; scroll-snap-type:y mandatory; }
+  .section{
+    min-height:100vh; scroll-snap-align:start; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    padding:60px 5vw; overflow:hidden;
+  }
+  .section.scrollable{ align-items:flex-start; overflow-y:auto; }
+  .bg{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(180deg, rgba(10,30,20,0.16) 0%, rgba(6,22,16,0.42) 100%),
+      url('https://images.unsplash.com/photo-1687277459165-e642e4ca4e50?auto=format&fit=crop&w=1800&q=80');
+    background-size:cover; background-position:center; background-attachment:fixed;
+    z-index:-1;
+  }
+  .bg.bg2{
+    background-image:
+      linear-gradient(180deg, rgba(6,20,16,0.38) 0%, rgba(4,16,12,0.6) 100%),
+      url('https://images.unsplash.com/photo-1744638629942-f6eb35d59b82?auto=format&fit=crop&w=1800&q=80');
+  }
+
+  .sound-toggle{
+    position:fixed; top:16px; right:16px; z-index:5;
+    display:flex; align-items:center; gap:7px;
+    background:var(--card); border:0.5px solid var(--card-border);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    padding:8px 13px; border-radius:999px; font-size:12px; color:#fff; cursor:pointer;
+  }
+  .sound-dot{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.6); }
+  .sound-toggle.on .sound-dot{ background:var(--gold); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+  .content{ width:100%; max-width:560px; color:#fff; }
+  .content.wide{ max-width:1180px; }
+  .eyebrow{ font-size:13px; color:var(--gold); margin:0 0 10px; font-weight:500; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(28px, 5vw, 44px); line-height:1.14; margin:0 0 12px; color:#fff; }
+  h1 em{ font-style:italic; color:var(--gold); }
+  .sub{ font-size:15px; color:rgba(255,255,255,0.85); max-width:56ch; line-height:1.6; margin:0 0 8px; }
+  .note{ font-size:12px; color:rgba(255,255,255,0.62); margin:0 0 20px; line-height:1.5; }
+
+  .card{
+    background:var(--card); border:0.5px solid var(--card-border);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-radius:20px; padding:26px;
+  }
+  label{ display:block; font-size:12.5px; color:rgba(255,255,255,0.75); margin-bottom:6px; }
+  .field{ margin-bottom:14px; }
+  input{
+    width:100%; background:rgba(255,255,255,0.16); border:0.5px solid rgba(255,255,255,0.35);
+    color:#fff; font-family:'Inter', sans-serif; font-size:15px;
+    padding:12px 13px; border-radius:10px; outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder{ color:rgba(255,255,255,0.55); }
+  input:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(240,198,116,0.22); }
+  input[type="date"]{ color-scheme:dark; }
+  .error{ font-size:12.5px; color:var(--danger); margin:-6px 0 12px; }
+  button.cta{
+    width:100%; background:var(--gold); color:#3A2409; border:none;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:15px;
+    padding:13px 18px; border-radius:10px; cursor:pointer;
+    transition:transform .12s ease, background .15s ease;
+  }
+  button.cta:hover{ background:#F5D590; }
+  button.cta:active{ transform:scale(0.98); }
+  button.cta:disabled{ opacity:0.6; cursor:default; }
+
+  .loading{ display:flex; align-items:center; gap:10px; margin-top:16px; color:rgba(255,255,255,0.8); font-size:13px; }
+  .leaf-spin{ width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--gold); border-radius:50%; animation:spin 0.9s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .result-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .stats-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:24px; }
+  .stat-card{
+    background:var(--card); border:0.5px solid var(--card-border);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-radius:18px; padding:22px 16px; text-align:center;
+    box-shadow:0 8px 26px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .stat-badge{
+    width:34px; height:34px; border-radius:8px;
+    background:rgba(240,198,116,0.22); border:1.5px solid rgba(240,198,116,0.55);
+    transform:rotate(45deg); display:flex; align-items:center; justify-content:center;
+    margin-bottom:6px;
+  }
+  .stat-badge span{ display:inline-block; transform:rotate(-45deg); color:var(--gold); font-size:14px; }
+  .stat-title{ font-size:11.5px; letter-spacing:0.03em; text-transform:uppercase; color:rgba(255,255,255,0.65); margin:0; }
+  .stat-big{ font-family:'Fraunces', serif; font-size:30px; color:var(--gold); margin:0; line-height:1.1; }
+  .stat-caption{ font-size:11px; color:rgba(255,255,255,0.6); line-height:1.4; margin:2px 0 0; max-width:22ch; }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    grid-auto-flow:dense;
+    gap:16px;
+    position:relative;
+  }
+  .pred-card{
+    grid-column:span 3;
+    background:var(--card); border:0.5px solid var(--card-border);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-radius:18px; padding:20px 22px;
+    opacity:0; animation:riseIn .5s ease forwards;
+    position:relative; overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .pred-card:hover{ transform:translateY(-3px); box-shadow:0 14px 36px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .pred-card.big{ grid-column:span 4; padding:26px 28px; }
+  .pred-card.big .pred-title{ font-size:17px; }
+  .pred-card.big .pred-text{ font-size:15px; }
+  .pred-card.small{ grid-column:span 2; }
+  .diamond{
+    position:absolute; border:2px solid rgba(240,198,116,0.35);
+    border-radius:6px; pointer-events:none;
+  }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .pred-head{ display:flex; align-items:center; gap:10px; margin-bottom:9px; position:relative; z-index:1; }
+  .pred-icon{
+    width:28px; height:28px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(240,198,116,0.22); border:1.5px solid rgba(240,198,116,0.55); color:var(--gold); font-size:13px; flex-shrink:0;
+    transform:rotate(45deg);
+  }
+  .pred-icon span{ display:inline-block; transform:rotate(-45deg); }
+  .pred-title{ font-size:15px; font-weight:600; margin:0; color:#fff; position:relative; z-index:1; }
+  .pred-text{ font-size:14px; color:rgba(255,255,255,0.87); line-height:1.75; margin:0; position:relative; z-index:1; }
+  .footer-row{ display:flex; flex-direction:column; align-items:stretch; gap:16px; margin-top:26px; }
+  .disclaimer-card{
+    display:flex; align-items:flex-start; gap:14px;
+    background:rgba(255,255,255,0.12); border:0.5px solid rgba(255,255,255,0.3);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-radius:16px; padding:20px 24px; width:100%;
+  }
+  .disclaimer-icon{
+    width:26px; height:26px; border-radius:7px; flex-shrink:0; margin-top:2px;
+    background:rgba(240,198,116,0.22); border:1.5px solid rgba(240,198,116,0.55);
+    transform:rotate(45deg); display:flex; align-items:center; justify-content:center;
+  }
+  .disclaimer-icon span{ display:inline-block; transform:rotate(-45deg); color:var(--gold); font-size:13px; font-weight:700; }
+  .disclaimer{ font-size:13.5px; color:rgba(255,255,255,0.75); line-height:1.7; margin:0; text-align:left; }
+  .disclaimer b{ color:rgba(255,255,255,0.92); font-weight:600; }
+  .again{
+    background:rgba(255,255,255,0.14); border:0.5px solid rgba(255,255,255,0.4);
+    color:#fff; font-family:'Inter', sans-serif; font-size:13px;
+    padding:9px 16px; border-radius:9px; cursor:pointer; white-space:nowrap;
+    transition:border-color .15s ease;
+  }
+  .again:hover{ border-color:var(--gold); }
+  .hint{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); font-size:11px; color:rgba(255,255,255,0.65); white-space:nowrap; }
+
+  /* —— Tablet —— */
+  @media (max-width:1024px){
+    .section{ padding:48px 4vw 56px; }
+    .content.wide{ max-width:920px; }
+    .grid{
+      grid-template-columns:repeat(2, 1fr);
+      gap:14px;
+    }
+    .pred-card, .pred-card.big, .pred-card.small{ grid-column:span 1; }
+    .pred-card.big{ padding:22px 20px; }
+    .stats-row{ gap:12px; }
+    .stat-card{ padding:18px 14px; }
+    .stat-big{ font-size:26px; }
+    .diamond{ display:none; }
+  }
+
+  /* —— Tablet portrait / large phone —— */
+  @media (max-width:768px){
+    .pager{ scroll-snap-type:y proximity; height:100svh; }
+    .section{
+      min-height:100svh;
+      height:auto;
+      padding:72px 20px 48px;
+      overflow:visible;
+      overflow-x:hidden;
+    }
+    .section.scrollable{
+      min-height:100svh;
+      padding-top:64px;
+      padding-bottom:40px;
+    }
+    .bg{ background-attachment:scroll; }
+    .sound-toggle{
+      top:12px; right:12px;
+      padding:7px 11px; font-size:11px; gap:6px;
+      max-width:calc(100vw - 24px);
+    }
+    .content{ max-width:100%; }
+    h1{ font-size:clamp(26px, 7.5vw, 36px); margin-bottom:10px; }
+    .sub{ font-size:14px; max-width:none; }
+    .note{ margin-bottom:16px; }
+    .card{ padding:20px 18px; border-radius:16px; }
+    input{ font-size:16px; padding:13px 12px; } /* 16px avoids iOS zoom */
+    button.cta{ font-size:15px; padding:14px 16px; }
+    .stats-row{
+      grid-template-columns:1fr;
+      gap:12px;
+      margin-bottom:20px;
+    }
+    .stat-card{ padding:18px 16px; flex-direction:row; text-align:left; gap:14px; }
+    .stat-badge{ margin-bottom:0; flex-shrink:0; }
+    .stat-card > :not(.stat-badge){ align-self:flex-start; }
+    .stat-caption{ max-width:none; }
+    .stat-big{ font-size:24px; }
+    .grid{ grid-template-columns:1fr; gap:12px; }
+    .pred-card, .pred-card.big, .pred-card.small{
+      grid-column:span 1;
+      padding:18px 16px;
+      border-radius:14px;
+    }
+    .pred-card.big .pred-title{ font-size:15px; }
+    .pred-card.big .pred-text{ font-size:14px; }
+    .pred-title{ font-size:14.5px; }
+    .pred-text{ font-size:13.5px; line-height:1.7; }
+    .footer-row{ margin-top:20px; gap:14px; }
+    .disclaimer-card{ padding:16px 14px; gap:12px; border-radius:14px; }
+    .disclaimer{ font-size:12.5px; line-height:1.65; }
+    .again{ width:100%; padding:12px 16px; font-size:14px; }
+    .hint{ bottom:12px; font-size:10px; }
+    .result-head{ margin-bottom:14px; }
+  }
+
+  /* —— Small phones —— */
+  @media (max-width:400px){
+    .section{ padding:68px 14px 40px; }
+    .eyebrow{ font-size:12px; }
+    h1{ font-size:clamp(24px, 8vw, 30px); }
+    .sub{ font-size:13.5px; }
+    .card{ padding:16px 14px; }
+    .sound-toggle span:last-child{
+      max-width:11ch;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+  }
+
+  /* Touch: reduce hover lift that feels sticky on tap */
+  @media (hover:none){
+    .pred-card:hover{ transform:none; box-shadow:0 8px 30px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25); }
+    button.cta:hover{ background:var(--gold); }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React;
+
+function useAmbientSound() {
+  const ctxRef = useRef(null);
+  const [on, setOn] = useState(false);
+  function start() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctxRef.current = ctx;
+    const master = ctx.createGain();
+    master.gain.value = 0.0;
+    master.connect(ctx.destination);
+    master.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 2);
+    const bufferSize = 2 * ctx.sampleRate;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer; noise.loop = true;
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = "lowpass"; noiseFilter.frequency.value = 650;
+    const noiseGain = ctx.createGain(); noiseGain.gain.value = 0.5;
+    noise.connect(noiseFilter).connect(noiseGain).connect(master);
+    noise.start();
+    [196, 261.6, 329.6].forEach((f, i) => {
+      const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = f;
+      const g = ctx.createGain(); g.gain.value = 0.045;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.08 + i * 0.02;
+      const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.025;
+      lfo.connect(lfoGain).connect(g.gain); lfo.start();
+      osc.connect(g).connect(master); osc.start();
+    });
+    setOn(true);
+  }
+  function stop() {
+    const ctx = ctxRef.current;
+    if (ctx) setTimeout(() => ctx.close(), 900);
+    ctxRef.current = null; setOn(false);
+  }
+  useEffect(() => () => { if (ctxRef.current) ctxRef.current.close(); }, []);
+  return { on, toggle: () => (on ? stop() : start()) };
+}
+
+const ICONS = { career:"💼", shaadi:"❤", partner:"♦", health:"✦", paisa:"◈", safar:"✈", log:"☯", mushkil:"▲" };
+
+// Real western zodiac date ranges
+const ZODIAC = [
+  { name: "Capricorn (Jadi)", from: [12,22], to: [1,19], trait: "zimmedar aur nazam-o-zabt wale", element: "Zameen" },
+  { name: "Aquarius (Dalw)", from: [1,20], to: [2,18], trait: "khud-mukhtar aur naye khayalat wale", element: "Hawa" },
+  { name: "Pisces (Hoot)", from: [2,19], to: [3,20], trait: "hassas aur tasawwur-pasand", element: "Pani" },
+  { name: "Aries (Hamal)", from: [3,21], to: [4,19], trait: "himmati aur jald faisla karne wale", element: "Aag" },
+  { name: "Taurus (Sor)", from: [4,20], to: [5,20], trait: "sabr wale aur practical", element: "Zameen" },
+  { name: "Gemini (Jauza)", from: [5,21], to: [6,20], trait: "baaton ke maahir aur curious", element: "Hawa" },
+  { name: "Cancer (Saratan)", from: [6,21], to: [7,22], trait: "jazbaati aur khayal rakhne wale", element: "Pani" },
+  { name: "Leo (Asad)", from: [7,23], to: [8,22], trait: "pur-etimaad aur leader tabiyat", element: "Aag" },
+  { name: "Virgo (Sumbula)", from: [8,23], to: [9,22], trait: "mehnati aur baareek-bini wale", element: "Zameen" },
+  { name: "Libra (Meezan)", from: [9,23], to: [10,22], trait: "mutwazin aur insaaf-pasand", element: "Hawa" },
+  { name: "Scorpio (Aqrab)", from: [10,23], to: [11,21], trait: "gehri soch wale aur pur-jazba", element: "Pani" },
+  { name: "Sagittarius (Qaus)", from: [11,22], to: [12,21], trait: "azaad-khayal aur safar-pasand", element: "Aag" }
+];
+const COMPAT = { Aag:"Hawa", Hawa:"Aag", Zameen:"Pani", Pani:"Zameen" };
+
+function getZodiac(dob) {
+  const [y, m, d] = dob.split("-").map(Number);
+  for (const z of ZODIAC) {
+    const [fm, fd] = z.from, [tm, td] = z.to;
+    if (fm > tm) { if ((m === fm && d >= fd) || (m === tm && d <= td)) return z; }
+    else { if ((m === fm && d >= fd) || (m === tm && d <= td) || (m > fm && m < tm)) return z; }
+  }
+  return ZODIAC[0];
+}
+
+// Real numerology life-path number: sum all digits of DOB to a single digit
+function getLifePath(dob) {
+  const digits = dob.replace(/-/g, "").split("").map(Number);
+  let sum = digits.reduce((a, b) => a + b, 0);
+  while (sum > 9) sum = String(sum).split("").reduce((a, b) => a + Number(b), 0);
+  return sum;
+}
+const LP_MEANING = {
+  1: "leadership aur independence",
+  2: "partnership aur samajhdari",
+  3: "creativity aur khud ko izhaar karna",
+  4: "discipline aur stability",
+  5: "azaadi aur tabdeeli",
+  6: "zimmedari aur doosron ka khayal",
+  7: "gehri soch aur samajh",
+  8: "mehnat aur material kamyabi",
+  9: "hamdardi aur bara-tar soch"
+};
+
+// Simple personal lucky number: name + DOB dono se, alag tareeqa (life-path sirf DOB se banta hai)
+function getLuckyNumber(name, dob) {
+  const str = (name + dob).toLowerCase().replace(/[^a-z0-9]/g, "");
+  let sum = 0;
+  for (let i = 0; i < str.length; i++) sum += str.charCodeAt(i);
+  while (sum > 9) sum = String(sum).split("").reduce((a, b) => a + Number(b), 0);
+  return sum || 1;
+}
+
+function buildPredictions(z, lp) {
+  const el = z.element;
+
+  const CONTENT = {
+    Aag: {
+      career: "Foran faisla lena aur zimmedari khud utha lena aapki khaasiyat hai — bandhi hui routine se jaldi bore ho jate hain.",
+      shaadi: "Jo dil mein ho wahi zaban par aata hai — chupana aapki fitrat nahi.",
+      partner: "Wo saathi chahiye jo khud confident ho aur aapko qaid mehsoos na karaye.",
+      health: "Josh zyada hota hai isi liye thakan bhi jaldi aati hai — aaram nazar-andaz na karein.",
+      paisa: "Jaldi faisla lene ki aadat kabhi nuksan bhi de sakti hai — bara qadam uthane se pehle thoda rukein.",
+      safar: "Achanak trip ka plan banana pasand hai — bas kagzaat waqt par taiyar rakhein.",
+      log: "Seedhi baat karte hain, ghuma kar nahi — kuch log isay sakhti samajh lete hain.",
+      mushkil: "Mushkil se bhaagte nahi, seedha muqabla karte hain — yehi himmat aapki pehchan hai."
+    },
+    Zameen: {
+      career: "Zimmedari mile to poori mehnat se nibhate hain — tarraqi dheeri magar pakki hoti hai.",
+      shaadi: "Jaldbazi mein faisla nahi karte, rishtay ko waqt aur sanjeedgi dete hain.",
+      partner: "Waqt ka paband aur family-oriented saathi sabse zyada suit karega.",
+      health: "Roz ka nazam sehat sambhalta hai — bikhra hua routine jism par asar dalta hai.",
+      paisa: "Savings karna aasan lagta hai — bas naye mauqon se darna chhod dein.",
+      safar: "Planning ke sath safar pasand hai — apna ghar banane ka khwab bhi ahmiyat rakhta hai.",
+      log: "Log aap par bharosa kar ke takiya karte hain — apni zaroorat bhoolein na.",
+      mushkil: "Sabr se qadam barhate hain, jaldbazi fitrat mein nahi — yehi sabr aakhir kaam aata hai."
+    },
+    Hawa: {
+      career: "Naye ideas aur logon se rabta aapki taqat hai — planning wale kaam mein chamaktay hain.",
+      shaadi: "Achi guftagu hi rishtay ki buniyad hai — khule dil se baat karna pasand hai.",
+      partner: "Zehni ham-khayal saathi zahiri kashish se zyada mayne rakhta hai.",
+      health: "Zyada sochna neend aur sukoon par asar dal sakta hai — kisi se baat kar lena madadgar hota hai.",
+      paisa: "Naye mauqon ki taraf jaldi rujhan hota hai — foran amal se pehle thoda sochein.",
+      safar: "Naye log aur nayi jagah energy deti hai — safar aapke liye seekhne ka zariya hai.",
+      log: "Bara social daayra rakhte hain — bas gehrai ko bhi utni hi ahmiyat dein.",
+      mushkil: "Kisi se baat kar lena akela sochne se zyada rasta dikhata hai."
+    },
+    Pani: {
+      career: "Dil se juri kaam mein hi asli mehnat nazar aati hai — sirf numbers mutmain nahi karte.",
+      shaadi: "Zahiri se zyada jazbaati connection chahiye — samajhne wala saathi hi sukoon dega.",
+      partner: "Khamoshi ko bhi samajhne wala hassas shaks behtar sath nibhayega.",
+      health: "Jazbaat ka seedha asar jism par hota hai — feelings dabane ke bajaye kisi se share karein.",
+      paisa: "Faisle jazbaat se ho jate hain — thodi practical soch shamil karna faydemand.",
+      safar: "Sukoon wali, pani ke qareeb jagah sabse zyada taaza kar deti hai.",
+      log: "Doosron ka dard gehrai se samajhte hain — apna khayal rakhna na bhoolein.",
+      mushkil: "Thoda waqt akela guzar kar khud ko sambhal lete hain — yehi aapka tareeqa hai."
+    }
+  };
+
+  const LP_NOTES = {
+    1: {
+      career: "Number 1: khud faisla lena aapko sabse zyada mutmain karta hai.",
+      shaadi: "Number 1: rishtay mein bhi apni raaye ki azaadi chahte hain.",
+      partner: "Number 1: barabar ka rutba dene wala saathi hi chalega.",
+      health: "Number 1: apne tareeqe se sehat sambhalna pasand karte hain.",
+      paisa: "Number 1: khud faisla lena paisay ke maamlay mein bhi tarjeeh hai.",
+      safar: "Number 1: akela safar bhi aapko rok nahi sakta.",
+      log: "Number 1: apni raah khud chunte hain, ziyada mashware nahi maangte.",
+      mushkil: "Number 1: khud hi apna rasta bana lete hain."
+    },
+    2: {
+      career: "Number 2: team ke sath kaam karna zyada raas aata hai.",
+      shaadi: "Number 2: sath aur samjhauta rishtay ki buniyad hai.",
+      partner: "Number 2: sunne wala aur sabr wala saathi chahiye.",
+      health: "Number 2: doosron ki fikar mein apni sehat bhool jate hain.",
+      paisa: "Number 2: mil kar faisla karna akele se behtar lagta hai.",
+      safar: "Number 2: kisi apne ke sath safar zyada acha lagta hai.",
+      log: "Number 2: doosron ke jazbaat ka khaas khayal rakhte hain.",
+      mushkil: "Number 2: kisi ke sath mil kar mushkil aasan ho jati hai."
+    },
+    3: {
+      career: "Number 3: khud ko izhaar karne wala kaam zyada mutmain karta hai.",
+      shaadi: "Number 3: hansi khushi aur baat cheet rishtay ko rangeen banati hai.",
+      partner: "Number 3: khush-mizaaj aur creative saathi zyada jamega.",
+      health: "Number 3: mood ka seedha asar energy par hota hai.",
+      paisa: "Number 3: kharch karte waqt mann ki sunte hain, hisaab baad mein.",
+      safar: "Number 3: nayi jagah dekh kar naye khayal aate hain.",
+      log: "Number 3: mehfil mein rounaq aap se hi hoti hai.",
+      mushkil: "Number 3: mushkil waqt bhi hansi mazaq se halka kar lete hain."
+    },
+    4: {
+      career: "Number 4: nazam aur mehnat se kaam banata hai.",
+      shaadi: "Number 4: rishtay mein stability sabse zyada chahiye hoti hai.",
+      partner: "Number 4: bharosemand aur sanjeeda saathi behtar rahega.",
+      health: "Number 4: fix routine sehat ke liye sabse zyada faydemand.",
+      paisa: "Number 4: hisaab kitab rakhna aata hai, isay barqarar rakhein.",
+      safar: "Number 4: soch samajh kar banaya hua plan hi pasand aata hai.",
+      log: "Number 4: waada nibhana aapki pehchan hai.",
+      mushkil: "Number 4: qadam qadam mehnat se mushkil hal karte hain."
+    },
+    5: {
+      career: "Number 5: ek hi kaam mein bandhe rehna mushkil lagta hai.",
+      shaadi: "Number 5: azaadi rishtay mein bhi chahiye hoti hai.",
+      partner: "Number 5: ghutan mehsoos na karaye, aisa saathi chahiye.",
+      health: "Number 5: badalti routine se sehat par asar par sakta hai.",
+      paisa: "Number 5: kharch karne ka rujhan bachat se zyada hota hai.",
+      safar: "Number 5: naye safar ka khayal hamesha zinda rehta hai.",
+      log: "Number 5: naye logon se milna kabhi bora nahi karta.",
+      mushkil: "Number 5: mahaul badal kar mushkil se nikal ate hain."
+    },
+    6: {
+      career: "Number 6: doosron ki madad karne wala kaam mutmain karta hai.",
+      shaadi: "Number 6: gharwalon ki khushi rishtay mein ahem hoti hai.",
+      partner: "Number 6: khayal rakhne wala aur zimmedar saathi chahiye.",
+      health: "Number 6: doosron ka khayal rakhte rakhte apni sehat bhool jate hain.",
+      paisa: "Number 6: family ki zaroorat pehle, apni baad mein rakhte hain.",
+      safar: "Number 6: family ke sath safar zyada sukoon deta hai.",
+      log: "Number 6: doosron ki zimmedari khud par le lete hain.",
+      mushkil: "Number 6: apnon ki fikar mushkil waqt mein bhi rehti hai."
+    },
+    7: {
+      career: "Number 7: gehri soch wala kaam zyada mutmain karta hai.",
+      shaadi: "Number 7: rishtay mein bhi khaamoshi aur samajh ko tarjeeh dete hain.",
+      partner: "Number 7: gehri baat karne wala saathi zyada suit karega.",
+      health: "Number 7: tanhai mein sukoon milta hai, isay waqt dein.",
+      paisa: "Number 7: paisay ka faisla bhi soch samajh kar hota hai.",
+      safar: "Number 7: khamosh, pur-sukoon jagah zyada raas aati hai.",
+      log: "Number 7: chand khaas log hi kaafi hote hain.",
+      mushkil: "Number 7: akele soch kar rasta khud nikal lete hain."
+    },
+    8: {
+      career: "Number 8: bara maqsad hasil karne ka josh hamesha rehta hai.",
+      shaadi: "Number 8: rishtay mein bhi stability aur tarraqi dono chahiye.",
+      partner: "Number 8: mehnati aur mustaqbil-pasand saathi zyada jamega.",
+      health: "Number 8: kaam ke josh mein sehat piche reh jati hai.",
+      paisa: "Number 8: bara sochna aata hai, bas risk sambhal kar lein.",
+      safar: "Number 8: safar bhi aksar kisi maqsad se juda hota hai.",
+      log: "Number 8: log aapki mehnat se mutasir hote hain.",
+      mushkil: "Number 8: mushkil ko bhi mauqe mein badal lete hain."
+    },
+    9: {
+      career: "Number 9: bara maqsad rakhne wala kaam mutmain karta hai.",
+      shaadi: "Number 9: rishtay mein bhi gehri hamdardi dikhate hain.",
+      partner: "Number 9: nek niyat aur samajhdar saathi zyada suit karega.",
+      health: "Number 9: doosron ki fikar mein khud ko piche rakh dete hain.",
+      paisa: "Number 9: paisay se zyada maqsad ko ahmiyat dete hain.",
+      safar: "Number 9: naye tajurbaat insaniyat ko samajhne ka zariya hain.",
+      log: "Number 9: har kisi ka bhala sochna aapki fitrat hai.",
+      mushkil: "Number 9: mushkil waqt mein bhi doosron ka khayal rakhte hain."
+    }
+  };
+
+  const out = {};
+  Object.keys(CONTENT.Aag).forEach((key) => {
+    out[key] = `${CONTENT[el][key]} ${LP_NOTES[lp][key]}`;
+  });
+  return out;
+}
+
+function App() {
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const sound = useAmbientSound();
+  const pagerRef = useRef(null);
+  const section2Ref = useRef(null);
+
+  function handleSubmit() {
+    if (!name.trim() || !dob) {
+      setError("Naam aur date of birth dono zaroori hain.");
+      return;
+    }
+    setError(""); setLoading(true);
+    setTimeout(() => {
+      const zodiac = getZodiac(dob);
+      const lp = getLifePath(dob);
+      const lucky = getLuckyNumber(name.trim(), dob);
+      const texts = buildPredictions(zodiac, lp);
+      const titleMap = {
+        career:"Career aur Job", shaadi:"Shaadi", partner:"Life Partner Kaisa Ho Sakta Hai",
+        health:"Sehat", paisa:"Paisa, Ghar aur Investment", safar:"Foreign aur Safar",
+        log:"Rishtay, Dost aur Log", mushkil:"Mushkilat aur Zindagi"
+      };
+      const preds = Object.keys(titleMap).map((k) => ({ key: k, title: titleMap[k], text: texts[k] }));
+      setLoading(false); setResult({ zodiac, lp, lucky, preds });
+      setTimeout(() => { if (section2Ref.current) section2Ref.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+    }, 1200);
+  }
+  function reset() {
+    setResult(null); setError("");
+    if (pagerRef.current) pagerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  return (
+    <div className="pager" ref={pagerRef}>
+      <div className={"sound-toggle" + (sound.on ? " on" : "")} onClick={sound.toggle}>
+        <span className="sound-dot"></span>
+        <span>{sound.on ? "Awaaz chal rahi hai" : "Sukoon wali awaaz"}</span>
+      </div>
+
+      <section className="section">
+        <div className="bg"></div>
+        <div className="content">
+          <p className="eyebrow">Falak</p>
+          <h1>Apna <em>future</em> jano,<br/>chand sitaron ki zubani.</h1>
+          <p className="sub">Naam aur date of birth dalein — career, shaadi, sehat, paisa, ghar, foreign aur zindagi ke baare mein detailed likha hua jawab payein.</p>
+          <p className="note">Sirf tafreeh ke liye — asli faisle experts aur family se mashwara kar ke lein.</p>
+          <div className="card">
+            <div className="field">
+              <label htmlFor="name">Apna naam</label>
+              <input id="name" type="text" placeholder="Naam likhein" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="dob">Date of birth</label>
+              <input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+            </div>
+            {error && <p className="error">{error}</p>}
+            <button className="cta" onClick={handleSubmit} disabled={loading}>
+              {loading ? "Sitare dekh rahe hain..." : "Future dekhein"}
+            </button>
+            {loading && (
+              <div className="loading">
+                <span className="leaf-spin"></span>
+                <span>Calculate kar rahe hain...</span>
+              </div>
+            )}
+          </div>
+        </div>
+        {result && <div className="hint">Neeche scroll karein ↓</div>}
+      </section>
+
+      <section className="section scrollable" ref={section2Ref}>
+        <div className="bg bg2"></div>
+        <div className="diamond" style={{width:90, height:90, top:"8%", right:"6%", transform:"rotate(15deg)"}}></div>
+        <div className="diamond" style={{width:50, height:50, bottom:"12%", left:"4%", transform:"rotate(25deg)", borderColor:"rgba(255,255,255,0.25)"}}></div>
+        <div className="diamond" style={{width:34, height:34, top:"40%", right:"3%", transform:"rotate(10deg)", borderColor:"rgba(255,255,255,0.2)"}}></div>
+        <div className="content wide">
+          <div className="result-head">
+            <p className="eyebrow" style={{margin:0}}>Aapki tafseeli future summary</p>
+          </div>
+          {result && (
+            <div className="stats-row">
+              <div className="stat-card">
+                <div className="stat-badge"><span>♦</span></div>
+                <p className="stat-title">Zodiac</p>
+                <p className="stat-big" style={{fontSize:22}}>{result.zodiac.name}</p>
+              </div>
+              <div className="stat-card">
+                <div className="stat-badge"><span>◆</span></div>
+                <p className="stat-title">Life-path</p>
+                <p className="stat-big">{result.lp}</p>
+                <p className="stat-caption">DOB se banta hai — buniyadi tabiyat zahir karta hai</p>
+              </div>
+              <div className="stat-card">
+                <div className="stat-badge"><span>★</span></div>
+                <p className="stat-title">Lucky Number</p>
+                <p className="stat-big">{result.lucky}</p>
+                <p className="stat-caption">Naam aur DOB dono se banta hai</p>
+              </div>
+            </div>
+          )}
+          {result ? (
+            <React.Fragment>
+              <div className="grid">
+                {result.preds.map((p, i) => {
+                  const sizeClass = [0,4].includes(i) ? "big" : (i % 3 === 2 ? "small" : "");
+                  return (
+                    <div className={"pred-card " + sizeClass} key={p.key} style={{ animationDelay: (i * 0.06) + "s" }}>
+                      <div className="pred-head">
+                        <span className="pred-icon"><span>{ICONS[p.key]}</span></span>
+                        <p className="pred-title">{p.title}</p>
+                      </div>
+                      <p className="pred-text">{p.text}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="footer-row">
+                <div className="disclaimer-card">
+                  <div className="disclaimer-icon"><span>i</span></div>
+                  <p className="disclaimer"><b>Sirf tafreeh ke liye.</b> Ye real zodiac date-ranges aur numerology calculation par mabni hai, is liye DOB badalne se result badalta hai — lekin ye science se saabit shuda nahi. Financial, immigration ya rishtay ka koi bhi faisla is par bharosa kar ke na karein.</p>
+                </div>
+                <button className="again" onClick={reset} style={{alignSelf:"center"}}>Dobara dekhein</button>
+              </div>
+            </React.Fragment>
+          ) : (
+            <p className="sub">Pehle page par apni details dal kar "Future dekhein" dabayein.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
