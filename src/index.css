@@ -52,48 +52,29 @@ body {
   overflow-y: auto;
 }
 
-/* Background layers — z-index 0 (not -1) so they stay visible inside #root */
+/* Original waterfall / forest backgrounds — z-index 0 so they stay visible inside #root */
 .bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background-color: var(--forest-mid);
+  background-color: #143022;
   background-image:
-    linear-gradient(165deg, rgba(8, 28, 18, 0.55) 0%, rgba(4, 18, 12, 0.72) 55%, rgba(2, 12, 8, 0.88) 100%),
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(240, 198, 116, 0.12), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 85% 70%, rgba(60, 140, 100, 0.18), transparent 50%),
-    url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=80');
+    linear-gradient(180deg, rgba(10, 30, 20, 0.16) 0%, rgba(6, 22, 16, 0.42) 100%),
+    url('https://images.unsplash.com/photo-1687277459165-e642e4ca4e50?auto=format&fit=crop&w=1800&q=80');
   background-size: cover;
   background-position: center;
-  animation: bgDrift 28s ease-in-out infinite alternate;
+  background-attachment: fixed;
 }
 
 .bg.bg2 {
   background-image:
-    linear-gradient(180deg, rgba(6, 20, 16, 0.62) 0%, rgba(4, 14, 10, 0.85) 100%),
-    radial-gradient(ellipse 60% 40% at 70% 20%, rgba(240, 198, 116, 0.1), transparent 50%),
-    url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1800&q=80');
+    linear-gradient(180deg, rgba(6, 20, 16, 0.38) 0%, rgba(4, 16, 12, 0.6) 100%),
+    url('https://images.unsplash.com/photo-1744638629942-f6eb35d59b82?auto=format&fit=crop&w=1800&q=80');
 }
 
 .bg-veil {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 0%, transparent 30%, rgba(0, 0, 0, 0.35) 100%),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.15), transparent 40%, transparent 60%, rgba(0, 0, 0, 0.2));
-  pointer-events: none;
-}
-
-@keyframes bgDrift {
-  from {
-    background-position: 50% 40%;
-    transform: scale(1);
-  }
-  to {
-    background-position: 55% 50%;
-    transform: scale(1.06);
-  }
+  display: none;
 }
 
 .starfield {
@@ -110,8 +91,9 @@ body {
   position: absolute;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 6px rgba(240, 198, 116, 0.8);
+  box-shadow: 0 0 6px rgba(240, 198, 116, 0.5);
   animation: twinkle ease-in-out infinite;
+  opacity: 0.35;
 }
 
 @keyframes twinkle {
@@ -969,10 +951,6 @@ button.cta:disabled {
   .diamond {
     display: none;
   }
-
-  .bg {
-    animation: none;
-  }
 }
 
 /* —— Phone —— */
@@ -994,6 +972,10 @@ button.cta:disabled {
     min-height: 100svh;
     padding-top: 64px;
     padding-bottom: 40px;
+  }
+
+  .bg {
+    background-attachment: scroll;
   }
 
   .float-logo {
@@ -1185,7 +1167,6 @@ button.cta:disabled {
   .brand-logo__ring,
   .brand-logo__core,
   .brand-logo__mark,
-  .bg,
   .star,
   .diamond-spin,
   .hint-bounce,
